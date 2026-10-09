@@ -1,0 +1,13 @@
+numpy>=1.26
+pandas>=2.1
+pyarrow>=14
+mido>=1.3
+xgboost>=2.0        # pip wheels include CUDA support; GPU is used automatically if available
+scipy>=1.11         # Spearman correlation
+matplotlib>=3.8
+tqdm>=4.66
+PyYAML>=6.0
+
+# Optional
+# shap>=0.44        # SHAP beeswarm plot (otherwise XGBoost's built-in TreeSHAP bar chart is used)
+# pytest>=8         # python -m pytest tests

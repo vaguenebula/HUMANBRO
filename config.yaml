@@ -1,0 +1,94 @@
+# Default configuration. Mirrors the dataclass defaults in config.py exactly
+# (tests/test_pipeline.py checks this). Copy and edit, then pass --config.
+# Any value can also be overridden on the command line: --set xgb.max_depth=10
+
+data:
+  maestro_dir: data/maestro-v3.0.0
+  features_path: data/features.parquet
+  include_drums: false
+
+beat:
+  source: tracked            # tracked | midi | auto  (MAESTRO tempo maps are dummies -> tracked)
+  frame_rate: 50.0
+  tempo_prior_bpm: 100.0
+  tempo_prior_octaves: 1.0
+  min_bpm: 40.0
+  max_bpm: 220.0
+  local_tempo_window_s: 6.0
+  local_tempo_hop_s: 1.0
+  local_tempo_max_ratio: 1.5
+  tightness: 60.0
+  snap_to_onset_frac: 0.15
+  meter_candidates: [3, 4]
+  fixed_meter: null
+  meter_segment_beats: 32
+  meter_phase_change_penalty: 2.0
+  auto_quantized_fraction: 0.8
+
+features:
+  context: bidirectional     # bidirectional (offline) | causal (no look-ahead)
+  chord_tolerance_s: 0.035
+  time_windows_s: [0.25, 0.5, 1.0, 3.0]
+  beat_windows: [1.0, 2.0, 4.0]
+  nearest_n: [8, 32]
+  strong_beat_tolerance: 0.12
+  rest_min_s: 0.2
+  phrase_gap_beats: 1.5
+  phrase_gap_min_s: 0.35
+  include_piece_features: true
+  quantize: false            # true = score-like experiment (snap timing to the beat grid)
+  quantize_subdivisions: [4]
+
+target:
+  mode: absolute             # absolute | residual
+  residual_window_notes: 24
+  residual_stat: median
+
+xgb:
+  objective: reg:squarederror
+  n_estimators: 2000
+  learning_rate: 0.03
+  max_depth: 8
+  subsample: 0.8
+  colsample_bytree: 0.8
+  min_child_weight: 10.0
+  reg_alpha: 0.0
+  reg_lambda: 1.0
+  gamma: 0.0
+  max_bin: 256
+  early_stopping_rounds: 100
+  device: auto               # auto | cpu | cuda
+  n_jobs: -1
+
+train:
+  seed: 42
+  feature_set: D             # A | B | C | D
+  experiment: primary        # primary | performance_conditioned
+  max_files_per_split: null
+  verbose_every: 100
+
+smoothing:
+  enabled: false
+  alpha: 0.35
+  strength: 0.5
+  accent_threshold: 8.0
+
+timing:                      # timing pipeline (build_dataset.py --task timing)
+  quantize_subdivisions: [4, 3]    # each beat snaps to 1/16 or triplet positions of the tracked beat
+  subdivision_switch_cost: 0.01    # squared-error gain (beats^2) a beat needs to switch to triplets
+  reference_smoothing_beats: 2     # target = onset - this smoothed beat (finer = tempo, not timing)
+  score_smoothing_beats: 8         # features see only this smooth tempo, like a DAW tempo map
+
+timing_model:                # train_timing.py
+  quantiles: [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
+  feature_set: C             # ablation: D (structure + piece-level) adds nothing over C
+  max_abs_offset_ms: 200.0   # larger offsets get zero training weight (beat-tracking errors)
+  n_estimators: 1500
+  learning_rate: 0.08
+  max_depth: 8
+  subsample: 0.8
+  colsample_bytree: 0.8
+  min_child_weight: 20.0
+  reg_lambda: 1.0
+  max_bin: 256
+  early_stopping_rounds: 50

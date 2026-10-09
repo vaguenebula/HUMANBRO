@@ -1,0 +1,8 @@
+﻿__pycache__/
+.pytest_cache/
+*.pyc
+cpp/build/
+data/
+models/
+logs/
+*.zip
